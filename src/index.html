@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="pico.min.css">
+    <script src="modal.js"></script>
+    <script src="config.js"></script>
+    <script src="app.js"></script>
+    <title>OSS Review Toolkit Kubernetes Operator UI</title>
+</head>
+<body onload="init()">
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <main class="container">
+        <nav>
+            <ul>
+                <li><strong>ORT Runs on Kubernetes</strong></li>
+            </ul>
+            <ul>
+                <li><a
+                        href="#"
+                        role="button"
+                        class="secondary"
+                        onClick="refreshRunList()"
+                >Refresh</a></li>
+                <li><a
+                        href="#"
+                        role="button"
+                        data-target="start-run-dialog"
+                        onClick="showCreateDialog()"
+                >Start Run</a></li>
+            </ul>
+        </nav>
+        <dialog id="start-run-dialog">
+            <article>
+                <header>
+                    <a
+                        href="#close"
+                        aria-label="Close"
+                        class="close"
+                        data-target="start-run-dialog"
+                        onClick="toggleModal(event)"
+                    ></a>
+                    Start Run
+                </header>
+                <div id="repo-url-container">
+                    <label for="repo-url">Repository URL
+                        <input
+                            id="repo-url"
+                            name="repo-url"
+                            type="text"
+                            placeholder="https://github.com/haikoschol/check-exif.git"
+                        >
+                    </label>
+                </div>
+                <progress id="start-run-loader" hidden></progress>
+                <footer>
+                    <a
+                        id="start-run-cancel"
+                        href="#cancel"
+                        role="button"
+                        class="secondary"
+                        aria-label="Cancel"
+                        data-target="start-run-dialog"
+                        onClick="toggleModal(event)"
+                    >Cancel</a>
+                    <a
+                        id="start-run-ok"
+                        href="#confirm"
+                        role="button"
+                        aria-label="Confirm"
+                        data-target="start-run-dialog"
+                        onClick="createRun()"
+                    >OK</a>
+                </footer>
+            </article>
+        </dialog>
+        <dialog id="run-details-dialog">
+            <article id="run-details">
+                <header>
+                    <a
+                        href="#close"
+                        aria-label="Close"
+                        class="close"
+                        data-target="run-details-dialog"
+                        onClick="toggleModal(event)"
+                    ></a>
+                    <div id="run-details-title"></div>
+                </header>
+                <main>
+                    <progress id="run-details-loader"></progress>
+                    <pre><code id="run-details-body"></code></pre>
+                </main>
+                <footer>
+                    <a
+                        href="#close"
+                        role="button"
+                        aria-label="Close"
+                        data-target="run-details-dialog"
+                        onClick="toggleModal(event)"
+                    >Close</a>
+                </footer>
+            </article>
+        </dialog>
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Scanned Repository</th>
+                    <th>Analyzer</th>
+                    <th>Scanner</th>
+                    <th>Reporter</th>
+                </tr>
+            </thead>
+            <tbody id="ort-run-list">
+            </tbody>
+        </table>
+        <progress id="table-loader"></progress>
+    </main>
+</body>
+</html>
