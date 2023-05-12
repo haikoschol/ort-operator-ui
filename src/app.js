@@ -135,7 +135,7 @@ function getStatuses(run) {
 function makeStatusLink(run, stage) {
     const status = run.status[stage]
 
-    if (status === 'Pending') {
+    if (status === 'Pending' || status === 'Aborted') {
         return status
     }
 
