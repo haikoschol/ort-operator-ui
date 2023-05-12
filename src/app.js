@@ -47,10 +47,12 @@ async function showDetailsDialog(title, bodyFn) {
         bodyElem.hidden = false
 
         document.getElementById('run-details-title').innerText = title
-        bodyElem.innerText = body
+        bodyElem.innerHTML = body
     }
 
-    bodyFn().then(show).catch(show)
+    const showError = (error) => show(`<div style="color: red">${error}</div>`)
+
+    bodyFn().then(show).catch(showError)
 }
 
 function showCreateDialog() {
@@ -86,17 +88,19 @@ async function createRun() {
 
 function makeRow(run) {
     const tr = document.createElement('tr')
-    const name = run.metadata.name
-    const repoUrl = makeLink(run.spec.repoUrl)
+    const repoUrl = makeLink(run.repoUrl)
     const [analyzer, scanner, reporter] = getStatuses(run)
 
-    const detailsBodyFn = async () => new Promise((resolve, _) => resolve(JSON.stringify(run, null, '  ')))
+    const detailsBodyFn = async () => {
+        const r = await fetchRun(run.name)
+        return `<pre><code>${r.kubernetesResource}</code></pre>`
+    }
 
     const runDetails = makeLink(
-        name,
+        run.name,
         '#run-details',
         'run-details-dialog',
-        () => showDetailsDialog(`OrtRun ${name}`, detailsBodyFn)
+        () => showDetailsDialog(`OrtRun ${run.name}`, detailsBodyFn)
     )
 
     appendCell(runDetails, tr)
@@ -121,10 +125,6 @@ function appendCell(content, tr) {
 }
 
 function getStatuses(run) {
-    if (!run.status) {
-        return ['Pending', 'Pending', 'Pending']
-    }
-
     const analyzer = makeStatusLink(run, 'analyzer')
     const scanner = makeStatusLink(run, 'scanner')
     const reporter = makeStatusLink(run, 'reporter')
@@ -140,17 +140,17 @@ function makeStatusLink(run, stage) {
     }
 
     if (stage === 'reporter' && status === 'Succeeded') {
-        return makeLink(status, `${config.APP_URL}/${run.metadata.name}/`)
+        return makeLink(status, `${config.APP_URL}/${run.name}/`)
     }
 
     const fn = status === 'Succeeded' ? fetchResultFile : fetchLogs
-    const detailsTitle = `${run.metadata.name} ${stage} ${status}`
+    const detailsTitle = `${run.name} ${stage} ${status}`
 
     return makeLink(
         status,
         '#run-details',
         'run-details-dialog',
-        async () => await showDetailsDialog(detailsTitle, () => fn(run.metadata.name, stage)),
+        async () => await showDetailsDialog(detailsTitle, () => fn(run.name, stage)),
     )
 }
 
@@ -173,7 +173,16 @@ async function fetchRuns() {
         throw Error(response.statusText)
     }
 
-    return (await response.json()).items
+    return (await response.json()).runs
+}
+
+async function fetchRun(name) {
+    const response = await fetch(`${config.API_URL}/runs/${name}`)
+    if (!response.ok) {
+        throw Error(response.statusText)
+    }
+
+    return (await response.json())
 }
 
 async function fetchLogs(name, stage) {
@@ -183,7 +192,13 @@ async function fetchLogs(name, stage) {
         throw Error(response.statusText)
     }
 
-    return await response.text()
+    const logs = await response.json()
+
+    const podLogs = logs.podLogs.map(l =>
+        `<h3>Pod: ${l.podName}</h3><pre><code>${l.podLogs}</code></pre>`
+    )
+
+    return `<div>${podLogs.join('')}</div>`
 }
 
 async function fetchResultFile(name, stage) {
@@ -205,7 +220,8 @@ async function fetchResultFile(name, stage) {
         throw Error(response.statusText)
     }
 
-    return await response.text()
+    const text = await response.text()
+    return `<pre><code>${text}</code></pre>`
 }
 
 function clearRunList() {

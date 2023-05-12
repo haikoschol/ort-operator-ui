@@ -26,6 +26,7 @@
                 <li><a
                         href="#"
                         role="button"
+                        aria-label="Start Run"
                         data-target="start-run-dialog"
                         onClick="showCreateDialog()"
                 >Start Run</a></li>
@@ -89,7 +90,7 @@
                 </header>
                 <main>
                     <progress id="run-details-loader"></progress>
-                    <pre><code id="run-details-body"></code></pre>
+                    <div id="run-details-body"></div>
                 </main>
                 <footer>
                     <a
